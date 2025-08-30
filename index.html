@@ -5,18 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0f172a">
     <link rel="manifest" href="./manifest.json">
-    <title>LPIC Forge PRO Demo</title>
+    <title>LPIC Forge PRO</title>
     <link rel="stylesheet" href="./style.css">
   </head>
   <body>
     <div class="wrap">
       <header class="panel">
         <div class="row" style="justify-content:space-between;align-items:center">
-          <h1 style="margin:0">LPIC Forge PRO (Demo)</h1>
+          <h1 style="margin:0">LPIC Forge PRO</h1>
           <div class="tabbar">
-            <div class="tab active" data-id="plan">Plan 60d</div>
-            <div class="tab" data-id="srs">Repaso (SRS)</div>
+            <div class="tab active" data-id="plan">Plan</div>
+            <div class="tab" data-id="srs">Repaso</div>
             <div class="tab" data-id="quiz">Quiz</div>
+            <div class="tab" data-id="exam">Simulador</div>
+            <div class="tab" data-id="labs">Labs</div>
+            <div class="tab" data-id="dash">Dashboard</div>
           </div>
         </div>
         <div class="row" style="margin-top:8px">
@@ -29,13 +32,13 @@
 
       <div class="hr"></div>
 
+      <!-- PLAN -->
       <section id="plan" class="view" style="display:block">
         <div class="panel">
           <h2>Plan de 60 días</h2>
-          <p>Meta diaria recomendada: <b>75–90 min</b>. La app medirá tu tiempo y tu racha automáticamente.</p>
-
+          <p>Recomendación: <b>75–90 min</b> por día. Guarda tu perfil y meta; todo se mide y queda en tu celular.</p>
           <div class="row">
-            <label>Minutos/día:&nbsp;</label>
+            <label>Min/día:&nbsp;</label>
             <input id="goalInput" type="number" class="input" value="75" style="max-width:120px">
             <button id="saveGoal" class="btn">Guardar</button>
             <span class="small">Correo/alias:&nbsp;</span>
@@ -43,24 +46,23 @@
             <button id="saveEmail" class="btn ghost">Guardar perfil</button>
             <button id="resetAll" class="btn" style="background:#6b2c2c;border-color:#8a3b3b">Restablecer progreso</button>
           </div>
-
           <div class="hr"></div>
           <div class="row">
             <button id="startTimer" class="btn">Iniciar temporizador</button>
             <button id="pauseTimer" class="btn ghost">Pausar</button>
             <div class="panel">⏱ <span id="timer">00:00</span></div>
           </div>
-
           <div class="hr"></div>
           <ol>
-            <li><b>Días 1–14:</b> 101.1–101.3 (arquitectura/arranque). 45% teoría, 55% práctica.</li>
-            <li><b>Días 15–35:</b> 102.1–102.6 (FHS/LVM/paquetería/libs/virtualización). 40% teoría, 60% práctica.</li>
+            <li><b>Días 1–14:</b> 101.1–101.3 (arquitectura/arranque).</li>
+            <li><b>Días 15–35:</b> 102.1–102.6 (FHS/LVM/paquetería/libs/virtualización).</li>
             <li><b>Días 36–54:</b> Mezcla + reforzar débiles. Simulacro 3× por semana.</li>
             <li><b>Días 55–60:</b> Repaso final y simulacros completos.</li>
           </ol>
         </div>
       </section>
 
+      <!-- SRS -->
       <section id="srs" class="view" style="display:none">
         <div class="panel">
           <h2>Repaso SRS</h2>
@@ -72,6 +74,7 @@
         </div>
       </section>
 
+      <!-- QUIZ -->
       <section id="quiz" class="view" style="display:none">
         <div class="panel">
           <h2>Quiz mixto</h2>
@@ -84,22 +87,64 @@
             <select id="diffSel" class="input" style="max-width:160px">
               <option value="all">Todas</option><option value="E">Fácil</option><option value="M">Media</option><option value="H">Difícil</option>
             </select>
-
             <label class="small" style="display:flex;align-items:center;gap:6px">
               <input type="checkbox" id="deferChk" checked>
-              Feedback diferido (mostrar al presionar Siguiente)
+              Feedback diferido (ver al presionar Siguiente)
             </label>
-
             <button id="startQuiz" class="btn">Empezar</button>
             <button id="startLesson10" class="btn ghost">Lección (10)</button>
           </div>
-
           <div id="quizPanel" style="margin-top:10px"></div>
         </div>
       </section>
 
-      <div class="footer">PWA offline • variantes de preguntas • metas diarias y racha • datos guardados localmente.</div>
+      <!-- SIMULADOR -->
+      <section id="exam" class="view" style="display:none">
+        <div class="panel">
+          <h2>Simulador de examen LPIC-1</h2>
+          <div class="row">
+            <label>Preguntas:&nbsp;</label>
+            <select id="examCount" class="input" style="max-width:120px">
+              <option>10</option><option>30</option><option selected>60</option>
+            </select>
+            <label>Tiempo:&nbsp;</label>
+            <select id="examTime" class="input" style="max-width:120px">
+              <option value="30">30 min</option><option value="60">60 min</option><option value="90" selected>90 min</option>
+            </select>
+            <button id="startExam" class="btn">Iniciar simulacro</button>
+            <div class="panel">⏱ <span id="examTimer">--:--:--</span></div>
+          </div>
+          <div class="small">* No podrás volver atrás. El feedback aparece al finalizar.</div>
+          <div id="examPanel" style="margin-top:10px"></div>
+        </div>
+      </section>
+
+      <!-- LABS -->
+      <section id="labs" class="view" style="display:none">
+        <div class="panel">
+          <h2>Laboratorios interactivos</h2>
+          <div class="row">
+            <select id="labSel" class="input" style="max-width:320px"></select>
+            <button id="startLab" class="btn">Iniciar</button>
+          </div>
+          <div id="labPanel" style="margin-top:10px"></div>
+        </div>
+      </section>
+
+      <!-- DASHBOARD -->
+      <section id="dash" class="view" style="display:none">
+        <div class="panel">
+          <h2>Dashboard de debilidades</h2>
+          <canvas id="chartTopics" width="960" height="360" style="max-width:100%"></canvas>
+          <div class="hr"></div>
+          <div id="dashList"></div>
+        </div>
+      </section>
+
+      <div class="footer small">PWA offline • simulador real • labs con validación • análisis por tema</div>
     </div>
+
     <script src="./app.js"></script>
+    <script>if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js'); }</script>
   </body>
 </html>
