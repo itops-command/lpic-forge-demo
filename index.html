@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="manifest" href="./manifest.json">
+    <title>LPIC Forge PRO Demo</title>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="panel">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <h1 style="margin:0">LPIC Forge PRO (Demo)</h1>
+          <div class="tabbar">
+            <div class="tab active" data-id="plan">Plan 60d</div>
+            <div class="tab" data-id="srs">Repaso (SRS)</div>
+            <div class="tab" data-id="quiz">Quiz</div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <div class="panel" style="padding:6px 10px"><b>Racha:</b> <span id="streak">0</span> días</div>
+          <div class="panel" style="padding:6px 10px"><b>Hoy:</b> <span id="today">0</span> min</div>
+          <div class="panel" style="padding:6px 10px"><b>Meta:</b> <span id="goal">75</span> min</div>
+          <div class="panel" style="padding:6px 10px"><b>XP:</b> <span id="xp">0</span></div>
+        </div>
+      </header>
+
+      <div class="hr"></div>
+
+      <section id="plan" class="view" style="display:block">
+        <div class="panel">
+          <h2>Plan de 60 días</h2>
+          <p>Meta diaria recomendada: <b>75–90 min</b>. La app medirá tu tiempo y tu racha automáticamente.</p>
+          <div class="row">
+            <label>Minutos/día:&nbsp;</label>
+            <input id="goalInput" type="number" class="input" value="75" style="max-width:120px">
+            <button id="saveGoal" class="btn">Guardar</button>
+          </div>
+          <div class="hr"></div>
+          <div class="row">
+            <button id="startTimer" class="btn">Iniciar temporizador</button>
+            <button id="pauseTimer" class="btn ghost">Pausar</button>
+            <div class="panel">⏱ <span id="timer">00:00</span></div>
+          </div>
+          <div class="hr"></div>
+          <ol>
+            <li><b>Días 1–14:</b> 101.1–101.3 (arquitectura/arranque). 45% teoría, 55% práctica.</li>
+            <li><b>Días 15–35:</b> 102.1–102.6 (FHS/LVM/paquetería/libs/virtualización). 40% teoría, 60% práctica.</li>
+            <li><b>Días 36–54:</b> Mezcla + reforzar débiles. Simulacro 3× por semana.</li>
+            <li><b>Días 55–60:</b> Repaso final y simulacros completos.</li>
+          </ol>
+        </div>
+      </section>
+
+      <section id="srs" class="view" style="display:none">
+        <div class="panel">
+          <h2>Repaso SRS</h2>
+          <div class="row">
+            <div class="panel">Pendientes hoy: <b id="dueCount">0</b></div>
+            <button id="refreshSRS" class="btn ghost">Refrescar</button>
+          </div>
+          <div id="srsBox" style="margin-top:10px"></div>
+        </div>
+      </section>
+
+      <section id="quiz" class="view" style="display:none">
+        <div class="panel">
+          <h2>Quiz mixto</h2>
+          <div class="row">
+            <select id="topicSel" class="input" style="max-width:200px">
+              <option value="all">Todos</option>
+              <option>101.1</option><option>101.2</option><option>101.3</option>
+              <option>102.1</option><option>102.2</option><option>102.3</option><option>102.4</option><option>102.5</option><option>102.6</option>
+            </select>
+            <select id="diffSel" class="input" style="max-width:160px"><option value="all">Todas</option><option value="E">Fácil</option><option value="M">Media</option><option value="H">Difícil</option></select>
+            <button id="startQuiz" class="btn">Empezar</button>
+          </div>
+          <div id="quizPanel" style="margin-top:10px"></div>
+        </div>
+      </section>
+
+      <div class="footer">PWA offline • variantes de preguntas • metas diarias y racha • datos guardados localmente.</div>
+    </div>
+    <script src="./app.js"></script>
+  </body>
+</html>
