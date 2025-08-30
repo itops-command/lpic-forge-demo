@@ -81,9 +81,19 @@
               <option>101.1</option><option>101.2</option><option>101.3</option>
               <option>102.1</option><option>102.2</option><option>102.3</option><option>102.4</option><option>102.5</option><option>102.6</option>
             </select>
-            <select id="diffSel" class="input" style="max-width:160px"><option value="all">Todas</option><option value="E">Fácil</option><option value="M">Media</option><option value="H">Difícil</option></select>
+            <select id="diffSel" class="input" style="max-width:160px">
+              <option value="all">Todas</option><option value="E">Fácil</option><option value="M">Media</option><option value="H">Difícil</option>
+            </select>
+
+            <label class="small" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" id="deferChk" checked>
+              Feedback diferido (mostrar al presionar Siguiente)
+            </label>
+
             <button id="startQuiz" class="btn">Empezar</button>
+            <button id="startLesson10" class="btn ghost">Lección (10)</button>
           </div>
+
           <div id="quizPanel" style="margin-top:10px"></div>
         </div>
       </section>
@@ -93,4 +103,3 @@
     <script src="./app.js"></script>
   </body>
 </html>
-
