@@ -1,0 +1,78 @@
+:root {
+  color-scheme: dark;
+  --bg:#0b1220;
+  --panel:#0f172a;
+  --muted:#9db1d9;
+  --text:#e6ebff;
+  --accent:#4f89ff;
+  --border:#1f2a44;
+  --good:#3dd68c;
+  --bad:#ff5d7a;
+}
+* { box-sizing:border-box }
+body {
+  margin:0;
+  background:linear-gradient(180deg,var(--bg),#0a0f1c);
+  font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;
+  color:var(--text);
+}
+.wrap { max-width:980px; margin:24px auto; padding:0 16px }
+.panel {
+  background:rgba(13,19,39,.65);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px
+}
+.row { display:flex; gap:10px; flex-wrap:wrap; align-items:center }
+.btn {
+  background:#2c3d66;
+  border:1px solid #395089;
+  color:#fff;
+  padding:10px 14px;
+  border-radius:12px;
+  cursor:pointer
+}
+.btn.ghost { background:transparent; border-color:#2b3a60 }
+.badge {
+  background:#2a3d66;
+  color:#fff;
+  padding:3px 10px;
+  border-radius:999px;
+  font-size:12px
+}
+.input, select {
+  background:#0e152b;
+  border:1px solid var(--border);
+  color:#fff;
+  padding:10px 12px;
+  border-radius:10px;
+  width:100%
+}
+.progress { height:10px; background:#14203a; border-radius:999px; overflow:hidden }
+.progress>div { height:100%; background:var(--accent) }
+.hr { height:1px; background:var(--border); margin:14px 0 }
+.tabbar { display:flex; gap:8px; flex-wrap:wrap }
+.tab {
+  padding:8px 12px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:#0d152b;
+  cursor:pointer
+}
+.tab.active { background:#244073 }
+.opt {
+  display:block;
+  width:100%;
+  text-align:left;
+  margin:8px 0;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:#0a1327
+}
+.kbd {
+  border:1px solid #3b4b73;
+  background:#0e1732;
+  border-radius:6px;
+  padding:2px 6px
+}
