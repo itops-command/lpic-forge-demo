@@ -70,9 +70,16 @@ body {
   border-radius:10px;
   background:#0a1327
 }
+.opt.sel.right { background:rgba(40,120,80,.25); border-color:#1aa46a }
+.opt.sel.wrong { background:rgba(160,30,60,.2); border-color:#a61a3b }
 .kbd {
   border:1px solid #3b4b73;
   background:#0e1732;
   border-radius:6px;
   padding:2px 6px
 }
+.feedback { padding:8px 12px; border-radius:10px; margin-top:8px; border:1px solid var(--border) }
+.feedback.ok { background:rgba(40,120,80,.2); border-color:#1aa46a }
+.feedback.ko { background:rgba(160,30,60,.2); border-color:#a61a3b }
+.small { font-size:12px; opacity:.8 }
+
