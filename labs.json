@@ -1,0 +1,51 @@
+[
+  {
+    "id": "lab-kernel-msg",
+    "title": "Mensajes del kernel",
+    "steps": [
+      {
+        "type": "cmd",
+        "prompt": "¿Qué comando imprime los mensajes recientes del kernel?",
+        "answer": ["dmesg"],
+        "explanation": "dmesg lee el ring buffer del kernel."
+      },
+      {
+        "type": "cmd",
+        "prompt": "Muestra los mensajes del kernel con paginación.",
+        "regex": "^\\s*dmesg\\s*\\|\\s*less\\s*$",
+        "explanation": "Usa tubería con less para navegar (dmesg | less)."
+      }
+    ]
+  },
+  {
+    "id": "lab-irqs",
+    "title": "Interrupciones y hardware",
+    "steps": [
+      {
+        "type": "fitb",
+        "prompt": "Archivo que lista las IRQ activas del sistema (ruta completa).",
+        "answer": ["/proc/interrupts"],
+        "explanation": "El kernel publica interrupciones en /proc/interrupts."
+      },
+      {
+        "type": "mcq",
+        "prompt": "¿Qué utilidad lista dispositivos del bus PCI?",
+        "options": ["lsusb", "lspci", "lsmod", "lscpu"],
+        "answer": [1],
+        "explanation": "lspci lista buses y dispositivos PCI."
+      }
+    ]
+  },
+  {
+    "id": "lab-grub",
+    "title": "GRUB2 básico",
+    "steps": [
+      {
+        "type": "fitb",
+        "prompt": "Archivo de configuración generado de GRUB2 (Debian/Ubuntu).",
+        "answer": ["/boot/grub/grub.cfg"],
+        "explanation": "Se genera a partir de plantillas; en Debian/Ubuntu con update-grub."
+      }
+    ]
+  }
+]
