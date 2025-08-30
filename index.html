@@ -33,17 +33,24 @@
         <div class="panel">
           <h2>Plan de 60 días</h2>
           <p>Meta diaria recomendada: <b>75–90 min</b>. La app medirá tu tiempo y tu racha automáticamente.</p>
+
           <div class="row">
             <label>Minutos/día:&nbsp;</label>
             <input id="goalInput" type="number" class="input" value="75" style="max-width:120px">
             <button id="saveGoal" class="btn">Guardar</button>
+            <span class="small">Correo/alias:&nbsp;</span>
+            <input id="emailInput" class="input" placeholder="tu@correo o alias" style="max-width:240px">
+            <button id="saveEmail" class="btn ghost">Guardar perfil</button>
+            <button id="resetAll" class="btn" style="background:#6b2c2c;border-color:#8a3b3b">Restablecer progreso</button>
           </div>
+
           <div class="hr"></div>
           <div class="row">
             <button id="startTimer" class="btn">Iniciar temporizador</button>
             <button id="pauseTimer" class="btn ghost">Pausar</button>
             <div class="panel">⏱ <span id="timer">00:00</span></div>
           </div>
+
           <div class="hr"></div>
           <ol>
             <li><b>Días 1–14:</b> 101.1–101.3 (arquitectura/arranque). 45% teoría, 55% práctica.</li>
@@ -86,3 +93,4 @@
     <script src="./app.js"></script>
   </body>
 </html>
+
