@@ -1,0 +1,64 @@
+[
+  {
+    "id": "101.1-irq-file",
+    "topic": "101.1",
+    "difficulty": "E",
+    "type": "fitb",
+    "prompt": "Archivo que lista las IRQ usadas por el kernel (ruta absoluta).",
+    "variants": ["¿Dónde ves todas las IRQ activas en Linux? (ruta completa)"],
+    "answer": ["/proc/interrupts"],
+    "explanation": "El kernel publica interrupciones en /proc/interrupts."
+  },
+  {
+    "id": "101.2-dmesg",
+    "topic": "101.2",
+    "difficulty": "E",
+    "type": "mcq",
+    "prompt": "Comando para ver el ring buffer del kernel.",
+    "variants": ["¿Qué comando imprime los mensajes recientes del kernel?"],
+    "options": ["journalctl","dmesg","logger","syslogd"],
+    "answer": [1],
+    "explanation": "dmesg imprime mensajes del kernel."
+  },
+  {
+    "id": "102.1-fhs",
+    "topic": "102.1",
+    "difficulty": "E",
+    "type": "mcq",
+    "prompt": "Propósito del FHS.",
+    "variants": ["¿Para qué sirve el estándar FHS en Linux?"],
+    "options": ["Permisos estándar","Ubicaciones estándar de archivos/dirs","Optimizar I/O","Cifrar /home"],
+    "answer": [1],
+    "explanation": "Estandariza ubicaciones."
+  },
+  {
+    "id": "101.1-lspci",
+    "topic": "101.1",
+    "difficulty": "E",
+    "type": "mcq",
+    "prompt": "¿Para qué sirve lspci?",
+    "options": ["Listar buses y dispositivos PCI","Gestionar módulos","Ver syslog","Crear particiones"],
+    "answer": [0],
+    "explanation": "Muestra información de buses y dispositivos PCI."
+  },
+  {
+    "id": "101.2-grubcfg",
+    "topic": "101.2",
+    "difficulty": "M",
+    "type": "mcq",
+    "prompt": "Archivo generado de GRUB2 (Debian/Ubuntu).",
+    "options": ["/boot/grub/menu.lst","/boot/grub/grub.conf","/boot/grub/grub.cfg","/etc/default/grub"],
+    "answer": [2],
+    "explanation": "El archivo activo de GRUB2 es /boot/grub/grub.cfg."
+  },
+  {
+    "id": "102.1-swap",
+    "topic": "102.1",
+    "difficulty": "E",
+    "type": "mcq",
+    "prompt": "Tipo de partición MBR para swap.",
+    "options": ["0x83","0x82","0x8e","0xfd"],
+    "answer": [1],
+    "explanation": "El tipo de partición swap en MBR es 0x82."
+  }
+]
