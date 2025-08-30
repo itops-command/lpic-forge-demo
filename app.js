@@ -12,6 +12,17 @@ state.srs     ||= {}; // id -> {box,nextDue}
 function save(){ localStorage.setItem(LSKEY, JSON.stringify(state)); }
 function today(){ return new Date().toISOString().slice(0,10); }
 
+function showBanner(msg){
+  let el = $('#banner');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'banner';
+    el.style.cssText = 'margin:10px 0;padding:10px;border:1px solid #7a5c15;background:#392c14;border-radius:10px';
+    $('.wrap').insertBefore(el, $('.wrap').firstChild?.nextSibling);
+  }
+  el.textContent = msg;
+}
+
 function addMinutes(m){
   const t = today();
   if(state.stats.lastDay!==t){
@@ -21,17 +32,20 @@ function addMinutes(m){
   state.stats.minutes += m; state.stats.xp += m*2;
   save(); renderHeader();
 }
+
 function renderHeader(){
   $('#streak').textContent = state.stats.streak;
   $('#today').textContent = state.stats.minutes;
   $('#goal').textContent = state.stats.goal;
   $('#xp').textContent = state.stats.xp;
-  $('#emailInput').value = state.profile.email || '';
+  const emailInput = $('#emailInput');
+  if(emailInput) emailInput.value = state.profile.email || '';
 }
+
 function resetAll(){
   if(confirm('¿Restablecer todo tu progreso? Esta acción no se puede deshacer.')){
     localStorage.removeItem(LSKEY);
-    location.reload();
+    location.reload(); // fuerza reinicio limpio
   }
 }
 
@@ -40,7 +54,17 @@ function tab(id){
   $$('.view').forEach(v=>v.style.display = (v.id===id? 'block':'none'));
 }
 
-async function loadQ(){ const r = await fetch('./questions.json'); return r.json(); }
+async function loadQ(){
+  try{
+    const r = await fetch('./questions.json', {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return await r.json();
+  }catch(e){
+    showBanner('No se pudieron cargar las preguntas (questions.json). Revisa que el archivo exista en la raíz y recarga con Ctrl+Shift+R.');
+    return [];
+  }
+}
+
 function shuffle(a){ return a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]) }
 function normalize(s){ return (s??'').toString().trim().toLowerCase().replace(/\s+/g,' ') }
 function isCorrect(q, ua){
@@ -56,7 +80,7 @@ async function init(){
   $$('.tab').forEach(t=>t.addEventListener('click', ()=>tab(t.dataset.id)));
   tab('plan');
 
-  // Perfil & meta
+  // Perfil & meta & reset
   $('#saveGoal').addEventListener('click', ()=>{
     const v = parseInt($('#goalInput').value||'0'); if(v>0){ state.stats.goal=v; save(); renderHeader(); alert('Meta guardada'); }
   });
@@ -79,6 +103,9 @@ async function init(){
 
   // Datos
   const Q = await loadQ();
+  if(!Array.isArray(Q) || Q.length===0){
+    // ya mostramos banner arriba
+  }
 
   // ------- SRS -------
   const BOX = {1:0,2:1,3:3,4:7,5:14};
@@ -92,7 +119,7 @@ async function init(){
   }
   function dueCards(){
     const now = Date.now();
-    return Q.filter(q=> (ensureCard(q.id).nextDue||0) <= now );
+    return (Q||[]).filter(q=> (ensureCard(q.id).nextDue||0) <= now );
   }
   function renderSRS(){
     const due = dueCards();
@@ -128,6 +155,10 @@ async function init(){
 
   // ------- Quiz -------
   function startQuiz(){
+    if(!Array.isArray(Q) || Q.length===0){
+      showBanner('No hay preguntas para el Quiz. Verifica questions.json y recarga con Ctrl+Shift+R.');
+      return;
+    }
     const topic = $('#topicSel').value;
     const diff = $('#diffSel').value;
     let pool = Q.slice();
@@ -136,10 +167,12 @@ async function init(){
     pool = shuffle(pool).slice(0,12);
 
     const panel = $('#quizPanel'); panel.innerHTML='';
-    let idx=0, answers={}, feedback=null;
+    if(pool.length===0){ panel.innerHTML = '<div class="panel">No hay preguntas con esos filtros.</div>'; return; }
+
+    let idx=0, answers={};
 
     function draw(){
-      const q = pool[idx]; feedback=null;
+      const q = pool[idx];
       const prompt = (q.variants && Math.random()<0.5)? q.variants[0]: q.prompt;
 
       panel.innerHTML = `
@@ -156,7 +189,7 @@ async function init(){
         </div>`;
 
       if(q.type==='mcq'){
-        $('#qArea').innerHTML = q.options.map((o,i)=>`<button class="opt" data-i="${i}">${o}</button>`).join('');
+        $('#qArea').innerHTML = q.options.map((o,i)=>`<button type="button" class="opt" data-i="${i}">${o}</button>`).join('');
         $$('#qArea .opt').forEach(b=> b.onclick = ()=>{
           const i = parseInt(b.dataset.i);
           answers[q.id]=i;
@@ -201,4 +234,5 @@ async function init(){
 }
 
 window.addEventListener('load', ()=>{ init(); });
+
 
