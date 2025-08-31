@@ -87,7 +87,7 @@ async function loadStudyData(){
     const r = await fetch('study.json', {cache:'no-store'});
     if(!r.ok) throw new Error('HTTP '+r.status);
     const d = await r.json();
-    return d.map((it,i)=> ({...it, id:i}));
+    return d.map((it,i)=> ({...it, id:i, qa: it.qa || []}));
   }catch(e){
     showBanner('No se pudo cargar study.json');
     return [];
@@ -103,14 +103,16 @@ function renderRepaso(){
   const box = $('#repasoCard'); if(!box) return;
   const items = state.repaso.items;
   if(items.length===0){
-    box.innerHTML = '<div class="panel">No hay material de estudio. <a href="./README.md">Agregar material de estudio</a></div>';
+    box.innerHTML = '<div class="panel">No se encontró material de estudio. Agrega study.json en la raíz del proyecto.</div>';
     $('#repasoProgText').textContent = '0/0 (0%)';
     $('#repasoProgBar').style.width='0%';
     return;
   }
   if(state.repaso.index >= items.length) state.repaso.index = items.length-1;
   const it = items[state.repaso.index];
-  const variants = it.answer.split('|');
+  const qa = it.qa || [];
+  const mainQA = qa[0] || {q:'', a:''};
+  const variants = mainQA.a.split('|');
   let practiceHTML;
   if(variants.length>1){
     practiceHTML = variants.map(v=>`<button class="opt" data-val="${v}">${v}</button>`).join('');
@@ -119,14 +121,18 @@ function renderRepaso(){
   }
   box.innerHTML = `
     <div class="card">
-      <div class="concept">${it.concept}</div>
-      <pre class="example">${it.command_example}</pre>
+      <div class="concept"><b>${it.command}</b> — ${it.explanation}</div>
+      <pre class="example">${it.example}</pre>
+      ${it.output? `<pre class="output">${it.output}</pre>`:''}
       <div class="practice">
-        <div>${it.practice}</div>
+        <div>${mainQA.q}</div>
         ${practiceHTML}
         <div id="repasoFB"></div>
       </div>
+      ${qa.length>1 ? `<ol class="small">${qa.slice(1).map(p=>`<li>${p.q} → ${p.a}</li>`).join('')}</ol>`:''}
+      <div class="small">Nota: ${it.tip}</div>
       <div class="small">Ref: ${it.exam_ref}</div>
+      <div class="small">Tags: ${(it.tags||[]).join(', ')}</div>
       <div class="nav">
         <button id="repasoPrev" class="btn ghost" ${state.repaso.index===0?'disabled':''} aria-label="Anterior">Anterior</button>
         <div class="row">
@@ -146,7 +152,7 @@ function renderRepaso(){
   $$('#repasoCard .opt').forEach(b=> b.onclick = ()=>{ sel=b.dataset.val; $$('#repasoCard .opt').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); });
   $('#repasoCheck').onclick = ()=>{
     const ua = $('#repasoInput')? $('#repasoInput').value : sel;
-    const ok = validatePractice(ua||'', it.answer);
+    const ok = validatePractice(ua||'', mainQA.a);
     $('#repasoFB').innerHTML = `<div class="feedback ${ok?'ok':'ko'}">${ok?'✅ Correcto':'❌ Incorrecto'}</div>`;
     if(ok && !state.repaso.seen.has(it.id)){
       state.repaso.seen.add(it.id);
@@ -156,7 +162,7 @@ function renderRepaso(){
     }
   };
   $('#repasoShow').onclick = ()=>{
-    $('#repasoFB').innerHTML = `<div class="feedback ok">${it.answer}</div>`;
+    $('#repasoFB').innerHTML = `<div class="feedback ok">${mainQA.a}</div>`;
   };
   $('#repasoPrev').onclick = ()=>{ if(state.repaso.index>0){ state.repaso.index--; saveRepaso(); renderRepaso(); } };
   $('#repasoNext').onclick = ()=>{ if(state.repaso.index<items.length-1){ state.repaso.index++; saveRepaso(); renderRepaso(); } };
@@ -322,7 +328,7 @@ async function init(){
   }
   renderSRS();
   $('#refreshSRS').addEventListener('click', renderSRS);
-  $('#btnRepasoInteractivo').addEventListener('click', ()=>{ renderRepaso(); setTimeout(()=>$('#repasoInput')?.focus(),0); });
+  $('#btnRepasoInteractivo').addEventListener('click', ()=>{ tab('repasoView'); renderRepaso(); setTimeout(()=>$('#repasoInput')?.focus(),0); });
 
   // ----- QUIZ / LECCIÓN -----
   function startQuizGeneric(pool){
