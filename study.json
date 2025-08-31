@@ -1,0 +1,42 @@
+[
+  {
+    "concept": "El comando `ls` lista el contenido de un directorio.",
+    "command_example": "ls -l /home",
+    "practice": "¿Qué comando lista en formato largo en el directorio actual?",
+    "answer": "ls -l",
+    "exam_ref": "101.2 - Navegar el sistema de archivos",
+    "tags": ["files", "listing"]
+  },
+  {
+    "concept": "`pwd` muestra la ruta completa del directorio actual.",
+    "command_example": "pwd",
+    "practice": "Estás en `/etc`. ¿Qué comando confirma tu ubicación?",
+    "answer": "pwd",
+    "exam_ref": "101.2 - Navegar el sistema de archivos",
+    "tags": ["filesystem"]
+  },
+  {
+    "concept": "`cd` cambia de directorio.",
+    "command_example": "cd /var/log",
+    "practice": "Escribe el comando para ir a `/usr/local`.",
+    "answer": "cd /usr/local",
+    "exam_ref": "101.2 - Navegar el sistema de archivos",
+    "tags": ["filesystem", "navigation"]
+  },
+  {
+    "concept": "`touch` crea archivos vacíos o actualiza la marca de tiempo.",
+    "command_example": "touch nuevo.txt",
+    "practice": "Crea un archivo vacío llamado `reporte.log`.",
+    "answer": "touch reporte.log",
+    "exam_ref": "103.2 - Manipular archivos",
+    "tags": ["files"]
+  },
+  {
+    "concept": "`cat` muestra el contenido de un archivo.",
+    "command_example": "cat /etc/hostname",
+    "practice": "¿Qué comando muestra `notas.txt`?",
+    "answer": "cat notas.txt",
+    "exam_ref": "103.2 - Manipular archivos",
+    "tags": ["files"]
+  }
+]

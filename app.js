@@ -62,6 +62,120 @@ async function loadJSON(path){
 }
 let Q = [];   // preguntas
 let LABS = []; // labs
+let STUDY = []; // repaso interactivo
+
+const RPKEY = 'repasoProgress';
+const rp = JSON.parse(localStorage.getItem(RPKEY) || '{}');
+state.repaso = {
+  items: [],
+  index: rp.index || 0,
+  correctCount: rp.correctCount || 0,
+  seen: new Set(rp.seen || []),
+  filters: []
+};
+
+function saveRepaso(){
+  localStorage.setItem(RPKEY, JSON.stringify({
+    index: state.repaso.index,
+    correctCount: state.repaso.correctCount,
+    seen: Array.from(state.repaso.seen)
+  }));
+}
+
+async function loadStudyData(){
+  try{
+    const r = await fetch('study.json', {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    return d.map((it,i)=> ({...it, id:i}));
+  }catch(e){
+    showBanner('No se pudo cargar study.json');
+    return [];
+  }
+}
+
+function validatePractice(input, answer){
+  const variants = answer.split('|').map(v=> normalize(v));
+  return variants.some(v=> normalize(input) === v);
+}
+
+function renderRepaso(){
+  const box = $('#repasoCard'); if(!box) return;
+  const items = state.repaso.items;
+  if(items.length===0){
+    box.innerHTML = '<div class="panel">No hay material de estudio. <a href="./README.md">Agregar material de estudio</a></div>';
+    $('#repasoProgText').textContent = '0/0 (0%)';
+    $('#repasoProgBar').style.width='0%';
+    return;
+  }
+  if(state.repaso.index >= items.length) state.repaso.index = items.length-1;
+  const it = items[state.repaso.index];
+  const variants = it.answer.split('|');
+  let practiceHTML;
+  if(variants.length>1){
+    practiceHTML = variants.map(v=>`<button class="opt" data-val="${v}">${v}</button>`).join('');
+  }else{
+    practiceHTML = `<input id="repasoInput" class="input" placeholder="Respuesta">`;
+  }
+  box.innerHTML = `
+    <div class="card">
+      <div class="concept">${it.concept}</div>
+      <pre class="example">${it.command_example}</pre>
+      <div class="practice">
+        <div>${it.practice}</div>
+        ${practiceHTML}
+        <div id="repasoFB"></div>
+      </div>
+      <div class="small">Ref: ${it.exam_ref}</div>
+      <div class="nav">
+        <button id="repasoPrev" class="btn ghost" ${state.repaso.index===0?'disabled':''} aria-label="Anterior">Anterior</button>
+        <div class="row">
+          <button id="repasoCheck" class="btn" aria-label="Validar">Validar</button>
+          <button id="repasoShow" class="btn ghost" aria-label="Ver respuesta">Ver respuesta</button>
+        </div>
+        <button id="repasoNext" class="btn ghost" ${state.repaso.index===items.length-1?'disabled':''} aria-label="Siguiente">Siguiente</button>
+      </div>
+    </div>`;
+
+  const correctInFilter = items.filter(x=> state.repaso.seen.has(x.id)).length;
+  const pct = Math.round((correctInFilter/Math.max(1,items.length))*100);
+  $('#repasoProgText').textContent = `${correctInFilter}/${items.length} (${pct}%)`;
+  $('#repasoProgBar').style.width = pct+'%';
+
+  let sel=null; // for mcq variant
+  $$('#repasoCard .opt').forEach(b=> b.onclick = ()=>{ sel=b.dataset.val; $$('#repasoCard .opt').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); });
+  $('#repasoCheck').onclick = ()=>{
+    const ua = $('#repasoInput')? $('#repasoInput').value : sel;
+    const ok = validatePractice(ua||'', it.answer);
+    $('#repasoFB').innerHTML = `<div class="feedback ${ok?'ok':'ko'}">${ok?'✅ Correcto':'❌ Incorrecto'}</div>`;
+    if(ok && !state.repaso.seen.has(it.id)){
+      state.repaso.seen.add(it.id);
+      state.repaso.correctCount = state.repaso.seen.size;
+      saveRepaso();
+      renderRepaso();
+    }
+  };
+  $('#repasoShow').onclick = ()=>{
+    $('#repasoFB').innerHTML = `<div class="feedback ok">${it.answer}</div>`;
+  };
+  $('#repasoPrev').onclick = ()=>{ if(state.repaso.index>0){ state.repaso.index--; saveRepaso(); renderRepaso(); } };
+  $('#repasoNext').onclick = ()=>{ if(state.repaso.index<items.length-1){ state.repaso.index++; saveRepaso(); renderRepaso(); } };
+
+  const inp = $('#repasoInput'); if(inp){ inp.focus(); }
+}
+
+function populateRepasoTags(){
+  const sel = $('#repasoFilter'); if(!sel) return;
+  const tags = Array.from(new Set(STUDY.flatMap(i=>i.tags||[]))).sort();
+  sel.innerHTML = '<option value="all">Todos</option>' + tags.map(t=> `<option value="${t}">${t}</option>`).join('');
+  sel.onchange = ()=>{
+    const val = sel.value;
+    state.repaso.items = (val==='all')? STUDY : STUDY.filter(it=> (it.tags||[]).includes(val));
+    state.repaso.index = 0;
+    saveRepaso();
+    renderRepaso();
+  };
+}
 
 // Utilidades preguntas
 function shuffle(a){ return a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]) }
@@ -168,6 +282,12 @@ async function init(){
   // Datos
   Q = await loadJSON('./questions.json');
   LABS = await loadJSON('./labs.json');
+  STUDY = await loadStudyData();
+  state.repaso.items = STUDY;
+  state.repaso.index = Math.min(state.repaso.index, Math.max(0, STUDY.length-1));
+  populateRepasoTags();
+  renderRepaso();
+  saveRepaso();
 
   // ----- SRS -----
   function renderSRS(){
@@ -202,6 +322,7 @@ async function init(){
   }
   renderSRS();
   $('#refreshSRS').addEventListener('click', renderSRS);
+  $('#btnRepasoInteractivo').addEventListener('click', ()=>{ renderRepaso(); setTimeout(()=>$('#repasoInput')?.focus(),0); });
 
   // ----- QUIZ / LECCIÓN -----
   function startQuizGeneric(pool){
@@ -499,6 +620,14 @@ async function init(){
   }
   populateLabs();
   $('#startLab').addEventListener('click', ()=>{ tab('labs'); startLab(); });
+
+  // ----- REPASO KEYBOARD -----
+  document.addEventListener('keydown', e=>{
+    if($('#repasoView')?.style.display!=='block') return;
+    if(e.key==='Enter'){ e.preventDefault(); $('#repasoCheck')?.click(); }
+    if(e.ctrlKey && e.key==='ArrowRight'){ e.preventDefault(); $('#repasoNext')?.click(); }
+    if(e.ctrlKey && e.key==='ArrowLeft'){ e.preventDefault(); $('#repasoPrev')?.click(); }
+  });
 
   // ----- DASHBOARD -----
   drawTopicsChart(); renderDashList();
