@@ -83,3 +83,21 @@ body {
 .feedback.ko { background:rgba(160,30,60,.2); border-color:#a61a3b }
 .small { font-size:12px; opacity:.8 }
 
+.card {
+  background:rgba(13,19,39,.65);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px;
+}
+.concept { font-size:18px; margin-bottom:8px }
+.example {
+  background:#0a1327;
+  padding:8px;
+  border-radius:8px;
+  font-family:monospace;
+  margin-bottom:8px;
+  overflow-x:auto;
+}
+.practice { margin-bottom:8px }
+.nav { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:10px }
+

@@ -1,0 +1,153 @@
+[
+  {
+    "command": "ls",
+    "explanation": "Lista el contenido de un directorio.",
+    "example": "ls -l /var",
+    "output": "drwxr-xr-x  2 root root 4096 Jun  1 12:34 log\n-rw-r--r--  1 root root   18 Jun  1 12:34 readme.txt",
+    "qa": [
+      {"q": "¿Qué comando lista el contenido incluyendo archivos ocultos?", "a": "ls -a"},
+      {"q": "¿Cómo se muestra el listado en formato largo?", "a": "ls -l"},
+      {"q": "¿Qué opción ordena por fecha de modificación?", "a": "-t"},
+      {"q": "¿Cómo listar el directorio /etc?", "a": "ls /etc"}
+    ],
+    "tip": "Combina opciones como ls -la para ver detalles de archivos ocultos.",
+    "exam_ref": "LPIC-1 — 101.2 Navegar el sistema de archivos",
+    "tags": ["files", "listing"]
+  },
+  {
+    "command": "pwd",
+    "explanation": "Muestra la ruta completa del directorio actual.",
+    "example": "pwd",
+    "output": "/home/usuario",
+    "qa": [
+      {"q": "¿Qué comando imprime el directorio de trabajo actual?", "a": "pwd"},
+      {"q": "¿Qué variable de entorno contiene la ruta actual?", "a": "PWD"},
+      {"q": "¿Cómo obtener la ruta sin usar pwd?", "a": "echo $PWD"},
+      {"q": "¿Qué opción muestra la ruta lógica?", "a": "pwd -L"}
+    ],
+    "tip": "Úsalo para confirmar tu ubicación antes de ejecutar acciones.",
+    "exam_ref": "LPIC-1 — 101.2 Navegar el sistema de archivos",
+    "tags": ["filesystem"]
+  },
+  {
+    "command": "cd",
+    "explanation": "Cambia el directorio de trabajo.",
+    "example": "cd /var/log",
+    "output": "",
+    "qa": [
+      {"q": "¿Qué comando te lleva a tu directorio personal?", "a": "cd"},
+      {"q": "¿Cómo regresar al directorio anterior?", "a": "cd -"},
+      {"q": "¿Qué comando va a /usr/local?", "a": "cd /usr/local"},
+      {"q": "¿Cómo moverse un nivel arriba?", "a": "cd .."}
+    ],
+    "tip": "Con `cd -` alternas entre los dos últimos directorios visitados.",
+    "exam_ref": "LPIC-1 — 101.2 Navegar el sistema de archivos",
+    "tags": ["filesystem", "navigation"]
+  },
+  {
+    "command": "touch",
+    "explanation": "Crea archivos vacíos o actualiza la marca de tiempo.",
+    "example": "touch archivo.txt",
+    "output": "",
+    "qa": [
+      {"q": "¿Qué comando crea un archivo vacío llamado notas?", "a": "touch notas"},
+      {"q": "¿Cómo actualizar la fecha de archivo.log?", "a": "touch archivo.log"},
+      {"q": "¿Qué opción evita crear el archivo si no existe?", "a": "touch -c archivo"},
+      {"q": "¿Cómo establecer una fecha específica?", "a": "touch -t 202401011200 archivo"}
+    ],
+    "tip": "Útil para crear archivos de marcador o modificar tiempos de acceso.",
+    "exam_ref": "LPIC-1 — 103.2 Manipular archivos",
+    "tags": ["files"]
+  },
+  {
+    "command": "cat",
+    "explanation": "Muestra el contenido de archivos y concatena varios.",
+    "example": "cat archivo.txt",
+    "output": "Linea 1\nLinea 2\nLinea 3",
+    "qa": [
+      {"q": "¿Qué comando muestra el contenido de archivo.txt?", "a": "cat archivo.txt"},
+      {"q": "¿Cómo numerar las líneas de un archivo?", "a": "cat -n archivo.txt"},
+      {"q": "¿Qué comando concatena a.txt y b.txt?", "a": "cat a.txt b.txt"},
+      {"q": "¿Cómo crear un archivo nuevo desde la entrada estándar?", "a": "cat > nuevo.txt"}
+    ],
+    "tip": "Puedes redirigir su salida a otros comandos o archivos.",
+    "exam_ref": "LPIC-1 — 103.2 Manipular archivos",
+    "tags": ["files", "view"]
+  },
+  {
+    "command": "mkdir",
+    "explanation": "Crea nuevos directorios.",
+    "example": "mkdir proyectos",
+    "output": "",
+    "qa": [
+      {"q": "¿Qué comando crea un directorio llamado data?", "a": "mkdir data"},
+      {"q": "¿Cómo crear directorios anidados foo/bar?", "a": "mkdir -p foo/bar"},
+      {"q": "¿Qué opción ajusta permisos al crear?", "a": "-m"},
+      {"q": "¿Cómo mostrar mensaje al crear un directorio?", "a": "mkdir -v test"}
+    ],
+    "tip": "Usa -p para crear estructuras completas sin errores si existen.",
+    "exam_ref": "LPIC-1 — 103.2 Manipular archivos",
+    "tags": ["files", "dirs"]
+  },
+  {
+    "command": "rm",
+    "explanation": "Elimina archivos o directorios.",
+    "example": "rm archivo.txt",
+    "output": "",
+    "qa": [
+      {"q": "¿Qué comando elimina archivo.txt?", "a": "rm archivo.txt"},
+      {"q": "¿Cómo eliminar un directorio y su contenido?", "a": "rm -r dir"},
+      {"q": "¿Qué opción solicita confirmación antes de borrar?", "a": "-i"},
+      {"q": "¿Cómo forzar la eliminación de archivo.txt?", "a": "rm -f archivo.txt"}
+    ],
+    "tip": "Ejecuta con precaución; no hay papelera de reciclaje.",
+    "exam_ref": "LPIC-1 — 103.2 Manipular archivos",
+    "tags": ["files", "delete"]
+  },
+  {
+    "command": "cp",
+    "explanation": "Copia archivos y directorios.",
+    "example": "cp origen destino",
+    "output": "",
+    "qa": [
+      {"q": "¿Qué comando copia a.txt a b.txt?", "a": "cp a.txt b.txt"},
+      {"q": "¿Cómo copiar recursivamente dir1 a dir2?", "a": "cp -r dir1 dir2"},
+      {"q": "¿Qué opción preserva atributos al copiar?", "a": "-p"},
+      {"q": "¿Cómo preguntar antes de sobrescribir?", "a": "-i"}
+    ],
+    "tip": "Combina -rp para copias fieles de directorios.",
+    "exam_ref": "LPIC-1 — 103.2 Manipular archivos",
+    "tags": ["files", "copy"]
+  },
+  {
+    "command": "mv",
+    "explanation": "Mueve o renombra archivos y directorios.",
+    "example": "mv viejo.txt nuevo.txt",
+    "output": "",
+    "qa": [
+      {"q": "¿Qué comando renombra a.txt a b.txt?", "a": "mv a.txt b.txt"},
+      {"q": "¿Cómo mover archivo.txt a /tmp?", "a": "mv archivo.txt /tmp/"},
+      {"q": "¿Qué opción pregunta antes de sobrescribir?", "a": "-i"},
+      {"q": "¿Cómo mover todos los .txt a dir/?", "a": "mv *.txt dir/"}
+    ],
+    "tip": "También sirve para reorganizar directorios completos.",
+    "exam_ref": "LPIC-1 — 103.2 Manipular archivos",
+    "tags": ["files", "move"]
+  },
+  {
+    "command": "echo",
+    "explanation": "Imprime texto o variables en la salida estándar.",
+    "example": "echo $HOME",
+    "output": "/home/usuario",
+    "qa": [
+      {"q": "¿Qué comando imprime la palabra hola?", "a": "echo hola"},
+      {"q": "¿Cómo evitar el salto de línea final?", "a": "echo -n hola"},
+      {"q": "¿Qué comando muestra el valor de la variable VAR?", "a": "echo $VAR"},
+      {"q": "¿Cómo redirigir la salida al archivo out.txt?", "a": "echo hola > out.txt"}
+    ],
+    "tip": "Útil en scripts para mensajes y redirecciones rápidas.",
+    "exam_ref": "LPIC-1 — 105.2 Uso de tuberías y redirecciones",
+    "tags": ["shell", "output"]
+  }
+]
+
