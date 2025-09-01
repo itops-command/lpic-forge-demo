@@ -60,6 +60,30 @@ body {
   cursor:pointer
 }
 .tab.active { background:#244073 }
+.quiz-option {
+  display:block;
+  width:100%;
+  text-align:left;
+  margin:8px 0;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:#0a1327;
+  cursor:pointer;
+  transition:background .1s ease,border-color .1s ease
+}
+.quiz-option.selected {
+  background:rgba(79,137,255,.15);
+  border-color:var(--accent)
+}
+.quiz-option.selected.right {
+  background:rgba(40,120,80,.25);
+  border-color:#1aa46a
+}
+.quiz-option.selected.wrong {
+  background:rgba(160,30,60,.2);
+  border-color:#a61a3b
+}
 .opt {
   display:block;
   width:100%;

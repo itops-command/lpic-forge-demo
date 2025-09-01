@@ -48,6 +48,7 @@ function resetAll(){
   if(confirm('¿Restablecer todo tu progreso?')){ localStorage.removeItem(LSKEY); location.reload(); }
 }
 function tab(id){
+  if(id==='srs' || id==='repaso') return;
   state.ui.lastTab = id; save();
   $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.id===id));
   $$('.view').forEach(v=>v.style.display = (v.id===id? 'block':'none'));
@@ -142,7 +143,8 @@ async function init(){
   renderHeader();
   // Tabs
   $$('.tab').forEach(t=>t.addEventListener('click', ()=>tab(t.dataset.id)));
-  tab(state.ui.lastTab || 'plan');
+  const initialTab = (state.ui.lastTab==='srs' || state.ui.lastTab==='repaso') ? 'plan' : (state.ui.lastTab || 'plan');
+  tab(initialTab);
 
   // Perfil, meta, reset
   $('#saveGoal').addEventListener('click', ()=>{
@@ -171,9 +173,12 @@ async function init(){
 
   // ----- SRS -----
   function renderSRS(){
+    const box = $('#srsBox');
+    const dc = $('#dueCount');
+    if(!box || !dc) return;
     const due = dueCards();
-    $('#dueCount').textContent = due.length;
-    const box = $('#srsBox'); box.innerHTML='';
+    dc.textContent = due.length;
+    box.innerHTML='';
     if(!due.length){ box.innerHTML='<div class="panel">¡Nada pendiente ahora! Haz un Quiz para añadir tarjetas.</div>'; return; }
     const q = due[0];
     const prompt = (q.variants && Math.random()<0.5)? q.variants[0] : q.prompt;
@@ -200,8 +205,11 @@ async function init(){
     $('#srsOK').onclick    = ()=>{ reviewCard(q.id, true); save(); renderSRS(); };
     $('#srsKO').onclick    = ()=>{ reviewCard(q.id, false); save(); renderSRS(); };
   }
-  renderSRS();
-  $('#refreshSRS').addEventListener('click', renderSRS);
+  const refreshSRS = $('#refreshSRS');
+  if(refreshSRS){
+    renderSRS();
+    refreshSRS.addEventListener('click', renderSRS);
+  }
 
   // ----- QUIZ / LECCIÓN -----
   function startQuizGeneric(pool){
@@ -241,20 +249,33 @@ async function init(){
       }
 
       if(q.type==='mcq'){
-        $('#qArea').innerHTML = q.options.map((o,i)=>`<button type="button" class="opt" data-i="${i}">${o}</button>`).join('');
-        $$('#qArea .opt').forEach(b=> b.onclick = ()=>{
-          if(locked) return; // bloquear cambio
-          const i = parseInt(b.dataset.i);
+        $('#qArea').innerHTML = q.options.map((o,i)=>`
+          <div class="quiz-option" data-index="${i}" tabindex="0" role="button" aria-pressed="false">
+            <input type="radio" name="q${q.id}" value="${i}" style="display:none">
+            ${o}
+          </div>`).join('');
+        const opts = $$('#qArea .quiz-option');
+        function select(i){
+          if(locked) return;
           answers[q.id]=i; locked=true;
+          opts.forEach((opt,j)=>{
+            const sel = j===i;
+            opt.classList.remove('selected','right','wrong');
+            opt.setAttribute('aria-pressed','false');
+            const inp = opt.querySelector('input'); if(inp) inp.checked = sel;
+            if(sel){ opt.classList.add('selected'); opt.setAttribute('aria-pressed','true'); }
+          });
           if(!defer){
             const ok = isCorrect(q,i);
-            $$('#qArea .opt').forEach(x=>x.classList.remove('sel','right','wrong'));
-            b.classList.add('sel', ok?'right':'wrong');
+            opts[i].classList.add(ok?'right':'wrong');
             evaluateAndShow();
-          }else{
-            $$('#qArea .opt').forEach(x=>x.classList.remove('sel','right','wrong'));
-            b.classList.add('sel');
           }
+        }
+        opts.forEach(opt=>{
+          opt.addEventListener('click', ()=> select(parseInt(opt.dataset.index)));
+          opt.addEventListener('keydown', e=>{
+            if(e.key==='Enter' || e.key===' '){ e.preventDefault(); select(parseInt(opt.dataset.index)); }
+          });
         });
       }else{
         $('#qArea').innerHTML = '<input class="input" id="ua" placeholder="Respuesta…">';
