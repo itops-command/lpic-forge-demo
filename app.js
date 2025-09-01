@@ -14,6 +14,7 @@ state.progress ||= {       // métricas
 };
 state.history  ||= { exams: [] }; // intentos de simulador
 state.ui       ||= { lastTab: 'plan' };
+state.quiz     ||= {};
 
 function save(){ localStorage.setItem(LSKEY, JSON.stringify(state)); }
 function today(){ return new Date().toISOString().slice(0,10); }
@@ -169,40 +170,6 @@ async function init(){
   Q = await loadJSON('./questions.json');
   LABS = await loadJSON('./labs.json');
 
-  // ----- SRS -----
-  function renderSRS(){
-    const due = dueCards();
-    $('#dueCount').textContent = due.length;
-    const box = $('#srsBox'); box.innerHTML='';
-    if(!due.length){ box.innerHTML='<div class="panel">¡Nada pendiente ahora! Haz un Quiz para añadir tarjetas.</div>'; return; }
-    const q = due[0];
-    const prompt = (q.variants && Math.random()<0.5)? q.variants[0] : q.prompt;
-    const ansText = (q.type==='mcq' ? q.options.filter((_,i)=>q.answer.includes(i)).join(' | ') : q.answer[0]);
-    box.innerHTML = `
-      <div class="panel">
-        <div class="row" style="justify-content:space-between"><small>${q.topic}</small><span class="badge">${q.difficulty}</span></div>
-        <div style="font-size:18px;margin-top:8px"><b>Concepto:</b> ${prompt}</div>
-        <div id="srsInputs" style="margin-top:10px"></div>
-        <div class="row" style="justify-content:space-between;margin-top:8px">
-          <button id="srsReveal" class="btn ghost">Mostrar explicación</button>
-          <div class="row">
-            <button id="srsKO" class="btn ghost">✗ Difícil</button>
-            <button id="srsOK" class="btn">✓ Fácil</button>
-          </div>
-        </div>
-        <div id="srsAns" style="margin-top:8px;display:none">
-          <div class="feedback ok"><b>Respuesta:</b> ${ansText}${q.explanation? ' — '+q.explanation:''}</div>
-        </div>
-      </div>`;
-    if(q.type==='fitb'){ $('#srsInputs').innerHTML = '<input class="input" id="srsInput" placeholder="Respuesta…">'; }
-    if(q.type==='mcq'){ $('#srsInputs').innerHTML = q.options.map((o,i)=>`<div class="opt">${o}</div>`).join(''); }
-    $('#srsReveal').onclick = ()=>{ $('#srsAns').style.display='block'; };
-    $('#srsOK').onclick    = ()=>{ reviewCard(q.id, true); save(); renderSRS(); };
-    $('#srsKO').onclick    = ()=>{ reviewCard(q.id, false); save(); renderSRS(); };
-  }
-  renderSRS();
-  $('#refreshSRS').addEventListener('click', renderSRS);
-
   // ----- QUIZ / LECCIÓN -----
   function startQuizGeneric(pool){
     const defer = $('#deferChk').checked;
@@ -210,12 +177,16 @@ async function init(){
     if(pool.length===0){ panel.innerHTML = '<div class="panel">No hay preguntas con esos filtros.</div>'; return; }
 
     let idx=0, answers={}; // id->ua
-    let locked=false, reviewing=false;
+    let reviewing=false;
+    state.quiz.locked=false;
+    state.quiz.selectedIndex=null;
 
     function draw(){
       const q = pool[idx];
       const prompt = (q.variants && Math.random()<0.5)? q.variants[0]: q.prompt;
-      locked=false; reviewing=false;
+      state.quiz.locked = answers[q.id] !== undefined;
+      state.quiz.selectedIndex = answers[q.id] ?? null;
+      reviewing=false;
 
       panel.innerHTML = `
         <div class="panel">
@@ -229,46 +200,87 @@ async function init(){
             <button id="nextQ" class="btn">Siguiente</button>
           </div>
         </div>`;
+      if(state.quiz.locked){ reviewing = true; }
 
       function evaluateAndShow(){
-        const ua = answers[q.id];
+        const ua = state.quiz.selectedIndex;
         if(ua===undefined || ua===null || ua===''){ showBanner('Selecciona o escribe una respuesta antes de continuar.'); return false; }
+        answers[q.id] = ua;
         const ok = isCorrect(q, ua);
         bumpProgress(q, ok); reviewCard(q.id, ok); save();
         const ansText = (q.type==='mcq' ? q.options.filter((_,k)=>q.answer.includes(k)).join(' | ') : q.answer[0]);
         $('#qFeedback').innerHTML = `<div class="feedback ${ok?'ok':'ko'}">${ok?'✅ Correcto':'❌ Incorrecto'} — <b>Respuesta:</b> ${ansText}${q.explanation? ' — '+q.explanation:''}</div>`;
-        reviewing = true; $('#nextQ').textContent = 'Continuar'; return true;
+        state.quiz.locked = true;
+        reviewing = defer;
+        if(defer){ $('#nextQ').textContent = 'Continuar'; }
+        return true;
       }
 
       if(q.type==='mcq'){
-        $('#qArea').innerHTML = q.options.map((o,i)=>`<button type="button" class="opt" data-i="${i}">${o}</button>`).join('');
-        $$('#qArea .opt').forEach(b=> b.onclick = ()=>{
-          if(locked) return; // bloquear cambio
-          const i = parseInt(b.dataset.i);
-          answers[q.id]=i; locked=true;
+        $('#qArea').innerHTML = q.options.map((o,i)=>`
+          <div class="quiz-option" tabindex="0" role="button" aria-pressed="${state.quiz.selectedIndex===i?'true':'false'}" data-i="${i}">
+            <input type="radio" name="q${q.id}" ${state.quiz.selectedIndex===i?'checked':''}>
+            ${o}
+          </div>`).join('');
+        function updateSel(i, force=false){
+          if(state.quiz.locked && !force) return;
+          state.quiz.selectedIndex = i;
+          $$('#qArea .quiz-option').forEach(x=>{
+            const sel = parseInt(x.dataset.i)===i;
+            x.classList.toggle('selected', sel);
+            x.setAttribute('aria-pressed', sel?'true':'false');
+            x.querySelector('input').checked = sel;
+          });
           if(!defer){
             const ok = isCorrect(q,i);
-            $$('#qArea .opt').forEach(x=>x.classList.remove('sel','right','wrong'));
-            b.classList.add('sel', ok?'right':'wrong');
-            evaluateAndShow();
+            const ansText = q.options.filter((_,k)=>q.answer.includes(k)).join(' | ');
+            $('#qFeedback').innerHTML = `<div class="feedback ${ok?'ok':'ko'}">${ok?'✅ Correcto':'❌ Incorrecto'} — <b>Respuesta:</b> ${ansText}${q.explanation? ' — '+q.explanation:''}</div>`;
           }else{
-            $$('#qArea .opt').forEach(x=>x.classList.remove('sel','right','wrong'));
-            b.classList.add('sel');
+            $('#qFeedback').innerHTML = '';
           }
+        }
+        $$('#qArea .quiz-option').forEach(opt=>{
+          const i = parseInt(opt.dataset.i);
+          opt.addEventListener('click', ()=> updateSel(i));
+          opt.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); updateSel(i); }});
         });
+        if(state.quiz.selectedIndex!==null){
+          updateSel(state.quiz.selectedIndex, true);
+          if(state.quiz.locked){
+            const ok = isCorrect(q,state.quiz.selectedIndex);
+            const ansText = q.options.filter((_,k)=>q.answer.includes(k)).join(' | ');
+            $('#qFeedback').innerHTML = `<div class="feedback ${ok?'ok':'ko'}">${ok?'✅ Correcto':'❌ Incorrecto'} — <b>Respuesta:</b> ${ansText}${q.explanation? ' — '+q.explanation:''}</div>`;
+          }
+        }
       }else{
         $('#qArea').innerHTML = '<input class="input" id="ua" placeholder="Respuesta…">';
-        $('#ua').onchange = (e)=>{ if(!locked){ answers[q.id]=e.target.value; locked=true; if(!defer){ evaluateAndShow(); } } };
+        const ua = $('#ua');
+        if(state.quiz.selectedIndex!==null) ua.value = state.quiz.selectedIndex;
+        ua.addEventListener('input', e=>{
+          if(state.quiz.locked) return;
+          state.quiz.selectedIndex = e.target.value;
+          if(!defer){
+            const ok = isCorrect(q, state.quiz.selectedIndex);
+            const ansText = q.answer[0];
+            $('#qFeedback').innerHTML = `<div class="feedback ${ok?'ok':'ko'}">${ok?'✅ Correcto':'❌ Incorrecto'} — <b>Respuesta:</b> ${ansText}${q.explanation? ' — '+q.explanation:''}</div>`;
+          }else{
+            $('#qFeedback').innerHTML = '';
+          }
+        });
+        if(state.quiz.locked){
+          const ok = isCorrect(q, state.quiz.selectedIndex || '');
+          const ansText = q.answer[0];
+          $('#qFeedback').innerHTML = `<div class="feedback ${ok?'ok':'ko'}">${ok?'✅ Correcto':'❌ Incorrecto'} — <b>Respuesta:</b> ${ansText}${q.explanation? ' — '+q.explanation:''}</div>`;
+          ua.value = state.quiz.selectedIndex || '';
+        }
       }
 
       $('#prevQ').onclick = ()=>{ idx = Math.max(0, idx-1); draw(); };
       $('#nextQ').onclick = ()=>{
         if(!reviewing){
+          if(!evaluateAndShow()) return;
           if(!defer){
-            if(answers[q.id]===undefined){ showBanner('Selecciona o escribe una respuesta.'); return; }
-            reviewing = true; $('#nextQ').textContent = 'Continuar';
-          }else{
-            if(!evaluateAndShow()) return;
+            if(idx===pool.length-1) finish(); else { idx++; draw(); }
           }
         }else{
           if(idx===pool.length-1) finish(); else { idx++; draw(); }
