@@ -78,6 +78,23 @@ body {
   border-radius:6px;
   padding:2px 6px
 }
+.quiz-option {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:8px 0;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:#0a1327;
+  cursor:pointer;
+  transition:background .15s,border-color .15s;
+}
+.quiz-option.selected {
+  background:#244073;
+  border-color:var(--accent);
+}
+.quiz-option input { pointer-events:none }
 .feedback { padding:8px 12px; border-radius:10px; margin-top:8px; border:1px solid var(--border) }
 .feedback.ok { background:rgba(40,120,80,.2); border-color:#1aa46a }
 .feedback.ko { background:rgba(160,30,60,.2); border-color:#a61a3b }
