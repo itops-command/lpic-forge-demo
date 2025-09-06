@@ -16,6 +16,7 @@
           <div class="tabbar">
             <div class="tab active" data-id="plan">Plan</div>
             <div class="tab" data-id="srs">Repaso</div>
+            <div class="tab" data-id="repasoView" id="btnRepasoInteractivo">Repaso Interactivo</div>
             <div class="tab" data-id="quiz">Quiz</div>
             <div class="tab" data-id="exam">Simulador</div>
             <div class="tab" data-id="labs">Labs</div>
@@ -71,6 +72,21 @@
             <button id="refreshSRS" class="btn ghost">Refrescar</button>
           </div>
           <div id="srsBox" style="margin-top:10px"></div>
+        </div>
+      </section>
+
+      <!-- REPASO INTERACTIVO -->
+      <section id="repasoView" class="view" style="display:none">
+        <div class="panel">
+          <h2>Repaso Interactivo</h2>
+          <div class="row">
+            <select id="repasoFilter" class="input" style="max-width:200px"></select>
+            <div class="row" style="flex:1;align-items:center;gap:10px">
+              <div class="progress" style="flex:1"><div id="repasoProgBar"></div></div>
+              <div class="small" id="repasoProgText">0/0 (0%)</div>
+            </div>
+          </div>
+          <div id="repasoCard" style="margin-top:10px"></div>
         </div>
       </section>
 
