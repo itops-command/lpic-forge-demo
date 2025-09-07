@@ -208,11 +208,6 @@ function reviewCard(id, ok){
   c.nextDue = nextDue(c.box);
 }
 
-function dueCards(){
-  const now = Date.now();
-  return (Q||[]).filter(q=> (ensureCard(q.id).nextDue||0) <= now );
-}
-
 // Dibujo simple de barras para Dashboard
 function drawTopicsChart(){
   const canvas = $('#chartTopics'); if(!canvas) return;
@@ -295,40 +290,11 @@ async function init(){
   renderRepaso();
   saveRepaso();
 
-  // ----- SRS -----
-  function renderSRS(){
-    const due = dueCards();
-    $('#dueCount').textContent = due.length;
-    const box = $('#srsBox'); box.innerHTML='';
-    if(!due.length){ box.innerHTML='<div class="panel">¡Nada pendiente ahora! Haz un Quiz para añadir tarjetas.</div>'; return; }
-    const q = due[0];
-    const prompt = (q.variants && Math.random()<0.5)? q.variants[0] : q.prompt;
-    const ansText = (q.type==='mcq' ? q.options.filter((_,i)=>q.answer.includes(i)).join(' | ') : q.answer[0]);
-    box.innerHTML = `
-      <div class="panel">
-        <div class="row" style="justify-content:space-between"><small>${q.topic}</small><span class="badge">${q.difficulty}</span></div>
-        <div style="font-size:18px;margin-top:8px"><b>Concepto:</b> ${prompt}</div>
-        <div id="srsInputs" style="margin-top:10px"></div>
-        <div class="row" style="justify-content:space-between;margin-top:8px">
-          <button id="srsReveal" class="btn ghost">Mostrar explicación</button>
-          <div class="row">
-            <button id="srsKO" class="btn ghost">✗ Difícil</button>
-            <button id="srsOK" class="btn">✓ Fácil</button>
-          </div>
-        </div>
-        <div id="srsAns" style="margin-top:8px;display:none">
-          <div class="feedback ok"><b>Respuesta:</b> ${ansText}${q.explanation? ' — '+q.explanation:''}</div>
-        </div>
-      </div>`;
-    if(q.type==='fitb'){ $('#srsInputs').innerHTML = '<input class="input" id="srsInput" placeholder="Respuesta…">'; }
-    if(q.type==='mcq'){ $('#srsInputs').innerHTML = q.options.map((o,i)=>`<div class="opt">${o}</div>`).join(''); }
-    $('#srsReveal').onclick = ()=>{ $('#srsAns').style.display='block'; };
-    $('#srsOK').onclick    = ()=>{ reviewCard(q.id, true); save(); renderSRS(); };
-    $('#srsKO').onclick    = ()=>{ reviewCard(q.id, false); save(); renderSRS(); };
-  }
-  renderSRS();
-  $('#refreshSRS').addEventListener('click', renderSRS);
-  $('#btnRepasoInteractivo').addEventListener('click', ()=>{ tab('repasoView'); renderRepaso(); setTimeout(()=>$('#repasoInput')?.focus(),0); });
+  $('#btnRepasoInteractivo').addEventListener('click', ()=>{
+    tab('repasoView');
+    renderRepaso();
+    setTimeout(()=>$('#repasoInput')?.focus(),0);
+  });
 
   // ----- QUIZ / LECCIÓN -----
   function startQuizGeneric(pool){

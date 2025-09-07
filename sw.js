@@ -1,4 +1,5 @@
-const CACHE = "lpic-forge-pro-v3";
+// bump cache to refresh clients after removing legacy Repaso view
+const CACHE = "lpic-forge-pro-v4";
 const ASSETS = ["./","./index.html","./style.css","./app.js","./questions.json","./labs.json","./manifest.json"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));
