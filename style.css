@@ -70,8 +70,11 @@ body {
   border-radius:10px;
   background:#0a1327
 }
-.opt.sel.right { background:rgba(40,120,80,.25); border-color:#1aa46a }
-.opt.sel.wrong { background:rgba(160,30,60,.2); border-color:#a61a3b }
+.opt.selected { background:rgba(79,137,255,.2); border-color:var(--accent) }
+.opt.correct { background:rgba(40,120,80,.25); border-color:#1aa46a }
+.opt.incorrect { background:rgba(160,30,60,.2); border-color:#a61a3b }
+.correct { background:rgba(40,120,80,.25); border-color:#1aa46a }
+.incorrect { background:rgba(160,30,60,.2); border-color:#a61a3b }
 .kbd {
   border:1px solid #3b4b73;
   background:#0e1732;

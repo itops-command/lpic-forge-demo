@@ -7,7 +7,6 @@ const state = JSON.parse(localStorage.getItem(LSKEY) || '{}');
 // Estado base
 state.profile  ||= { email: '' };
 state.stats    ||= { goal: 75, streak: 0, lastDay: '', minutes: 0, xp: 0 };
-state.srs      ||= {};     // id -> {box,nextDue}
 state.progress ||= {       // métricas
   perQ: {},                // id -> {right, wrong}
   perTopic: {}             // topic -> {right, wrong}
@@ -198,20 +197,6 @@ function bumpProgress(q, ok){
   else  { state.progress.perQ[q.id].wrong++; state.progress.perTopic[q.topic].wrong++; }
 }
 
-// SRS
-const BOX = {1:0,2:1,3:3,4:7,5:14};
-function ensureCard(id){ state.srs[id] ||= {box:1,nextDue:0}; return state.srs[id]; }
-function nextDue(box){ return Date.now() + (BOX[box]||0)*24*60*60*1000; }
-function reviewCard(id, ok){
-  const c = ensureCard(id);
-  c.box = ok ? Math.min(5, c.box+1) : 1;
-  c.nextDue = nextDue(c.box);
-}
-
-function dueCards(){
-  const now = Date.now();
-  return (Q||[]).filter(q=> (ensureCard(q.id).nextDue||0) <= now );
-}
 
 // Dibujo simple de barras para Dashboard
 function drawTopicsChart(){
@@ -296,53 +281,20 @@ async function init(){
   saveRepaso();
 
   // ----- SRS -----
-  function renderSRS(){
-    const due = dueCards();
-    $('#dueCount').textContent = due.length;
-    const box = $('#srsBox'); box.innerHTML='';
-    if(!due.length){ box.innerHTML='<div class="panel">¡Nada pendiente ahora! Haz un Quiz para añadir tarjetas.</div>'; return; }
-    const q = due[0];
-    const prompt = (q.variants && Math.random()<0.5)? q.variants[0] : q.prompt;
-    const ansText = (q.type==='mcq' ? q.options.filter((_,i)=>q.answer.includes(i)).join(' | ') : q.answer[0]);
-    box.innerHTML = `
-      <div class="panel">
-        <div class="row" style="justify-content:space-between"><small>${q.topic}</small><span class="badge">${q.difficulty}</span></div>
-        <div style="font-size:18px;margin-top:8px"><b>Concepto:</b> ${prompt}</div>
-        <div id="srsInputs" style="margin-top:10px"></div>
-        <div class="row" style="justify-content:space-between;margin-top:8px">
-          <button id="srsReveal" class="btn ghost">Mostrar explicación</button>
-          <div class="row">
-            <button id="srsKO" class="btn ghost">✗ Difícil</button>
-            <button id="srsOK" class="btn">✓ Fácil</button>
-          </div>
-        </div>
-        <div id="srsAns" style="margin-top:8px;display:none">
-          <div class="feedback ok"><b>Respuesta:</b> ${ansText}${q.explanation? ' — '+q.explanation:''}</div>
-        </div>
-      </div>`;
-    if(q.type==='fitb'){ $('#srsInputs').innerHTML = '<input class="input" id="srsInput" placeholder="Respuesta…">'; }
-    if(q.type==='mcq'){ $('#srsInputs').innerHTML = q.options.map((o,i)=>`<div class="opt">${o}</div>`).join(''); }
-    $('#srsReveal').onclick = ()=>{ $('#srsAns').style.display='block'; };
-    $('#srsOK').onclick    = ()=>{ reviewCard(q.id, true); save(); renderSRS(); };
-    $('#srsKO').onclick    = ()=>{ reviewCard(q.id, false); save(); renderSRS(); };
-  }
-  renderSRS();
-  $('#refreshSRS').addEventListener('click', renderSRS);
   $('#btnRepasoInteractivo').addEventListener('click', ()=>{ tab('repasoView'); renderRepaso(); setTimeout(()=>$('#repasoInput')?.focus(),0); });
 
   // ----- QUIZ / LECCIÓN -----
   function startQuizGeneric(pool){
-    const defer = $('#deferChk').checked;
     const panel = $('#quizPanel'); panel.innerHTML='';
     if(pool.length===0){ panel.innerHTML = '<div class="panel">No hay preguntas con esos filtros.</div>'; return; }
 
     let idx=0, answers={}; // id->ua
-    let locked=false, reviewing=false;
+    let reviewing=false;
 
     function draw(){
       const q = pool[idx];
       const prompt = (q.variants && Math.random()<0.5)? q.variants[0]: q.prompt;
-      locked=false; reviewing=false;
+      reviewing=false;
 
       panel.innerHTML = `
         <div class="panel">
@@ -361,7 +313,21 @@ async function init(){
         const ua = answers[q.id];
         if(ua===undefined || ua===null || ua===''){ showBanner('Selecciona o escribe una respuesta antes de continuar.'); return false; }
         const ok = isCorrect(q, ua);
-        bumpProgress(q, ok); reviewCard(q.id, ok); save();
+        bumpProgress(q, ok); save();
+        if(q.type==='mcq'){
+          const btns = $$('#qArea .opt');
+          btns.forEach(x=>{ x.onclick=null; x.disabled=true; x.classList.remove('selected'); });
+          if(ok){
+            btns[ua].classList.add('correct');
+          }else{
+            btns[ua].classList.add('incorrect');
+            q.answer.forEach(ai=> btns[ai].classList.add('correct'));
+          }
+        }else{
+          const inp = $('#ua');
+          inp.disabled=true;
+          inp.classList.add(ok?'correct':'incorrect');
+        }
         const ansText = (q.type==='mcq' ? q.options.filter((_,k)=>q.answer.includes(k)).join(' | ') : q.answer[0]);
         $('#qFeedback').innerHTML = `<div class="feedback ${ok?'ok':'ko'}">${ok?'✅ Correcto':'❌ Incorrecto'} — <b>Respuesta:</b> ${ansText}${q.explanation? ' — '+q.explanation:''}</div>`;
         reviewing = true; $('#nextQ').textContent = 'Continuar'; return true;
@@ -369,34 +335,26 @@ async function init(){
 
       if(q.type==='mcq'){
         $('#qArea').innerHTML = q.options.map((o,i)=>`<button type="button" class="opt" data-i="${i}">${o}</button>`).join('');
-        $$('#qArea .opt').forEach(b=> b.onclick = ()=>{
-          if(locked) return; // bloquear cambio
+        $$('#qArea .opt').forEach(b=>{
           const i = parseInt(b.dataset.i);
-          answers[q.id]=i; locked=true;
-          if(!defer){
-            const ok = isCorrect(q,i);
-            $$('#qArea .opt').forEach(x=>x.classList.remove('sel','right','wrong'));
-            b.classList.add('sel', ok?'right':'wrong');
-            evaluateAndShow();
-          }else{
-            $$('#qArea .opt').forEach(x=>x.classList.remove('sel','right','wrong'));
-            b.classList.add('sel');
-          }
+          if(answers[q.id]===i) b.classList.add('selected');
+          b.onclick = ()=>{
+            if(reviewing) return;
+            answers[q.id]=i;
+            $$('#qArea .opt').forEach(x=>x.classList.remove('selected'));
+            b.classList.add('selected');
+          };
         });
       }else{
         $('#qArea').innerHTML = '<input class="input" id="ua" placeholder="Respuesta…">';
-        $('#ua').onchange = (e)=>{ if(!locked){ answers[q.id]=e.target.value; locked=true; if(!defer){ evaluateAndShow(); } } };
+        $('#ua').addEventListener('input', e=>{ answers[q.id]=e.target.value; });
+        if(answers[q.id]) $('#ua').value = answers[q.id];
       }
 
       $('#prevQ').onclick = ()=>{ idx = Math.max(0, idx-1); draw(); };
       $('#nextQ').onclick = ()=>{
         if(!reviewing){
-          if(!defer){
-            if(answers[q.id]===undefined){ showBanner('Selecciona o escribe una respuesta.'); return; }
-            reviewing = true; $('#nextQ').textContent = 'Continuar';
-          }else{
-            if(!evaluateAndShow()) return;
-          }
+          if(!evaluateAndShow()) return;
         }else{
           if(idx===pool.length-1) finish(); else { idx++; draw(); }
         }
@@ -408,7 +366,6 @@ async function init(){
       pool.forEach(q=>{
         const ua = answers[q.id];
         if(ua!==undefined && ua!==null && ua!==''){ made++; if(isCorrect(q,ua)) correct++; }
-        if(ua!==undefined) { ensureCard(q.id); }
       });
       save();
 
@@ -534,7 +491,7 @@ async function init(){
       let correct=0, made=0;
       pool.forEach(q=>{
         const ua = answers[q.id];
-        if(ua!==undefined && ua!==''){ made++; if(isCorrect(q,ua)) correct++; bumpProgress(q, isCorrect(q,ua)); reviewCard(q.id, isCorrect(q,ua)); }
+        if(ua!==undefined && ua!==''){ made++; if(isCorrect(q,ua)) correct++; bumpProgress(q, isCorrect(q,ua)); }
       });
       save();
 
