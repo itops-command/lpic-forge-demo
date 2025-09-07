@@ -298,17 +298,14 @@ async function init(){
 
   // ----- QUIZ / LECCIÓN -----
   function startQuizGeneric(pool){
-    const defer = $('#deferChk').checked;
     const panel = $('#quizPanel'); panel.innerHTML='';
     if(pool.length===0){ panel.innerHTML = '<div class="panel">No hay preguntas con esos filtros.</div>'; return; }
 
-    let idx=0, answers={}; // id->ua
-    let locked=false, reviewing=false;
+    let idx=0, answers={}, done={}; // id->ua, id->evaluated
 
     function draw(){
       const q = pool[idx];
       const prompt = (q.variants && Math.random()<0.5)? q.variants[0]: q.prompt;
-      locked=false; reviewing=false;
 
       panel.innerHTML = `
         <div class="panel">
@@ -330,39 +327,57 @@ async function init(){
         bumpProgress(q, ok); reviewCard(q.id, ok); save();
         const ansText = (q.type==='mcq' ? q.options.filter((_,k)=>q.answer.includes(k)).join(' | ') : q.answer[0]);
         $('#qFeedback').innerHTML = `<div class="feedback ${ok?'ok':'ko'}">${ok?'✅ Correcto':'❌ Incorrecto'} — <b>Respuesta:</b> ${ansText}${q.explanation? ' — '+q.explanation:''}</div>`;
-        reviewing = true; $('#nextQ').textContent = 'Continuar'; return true;
+        if(q.type==='mcq'){
+          $$('#qArea .opt').forEach((btn,i)=>{
+            btn.disabled = true;
+            btn.classList.remove('selected');
+            if(q.answer.includes(i)) btn.classList.add('correct');
+            if(i===ua && !q.answer.includes(i)) btn.classList.add('incorrect');
+          });
+        }else{
+          $('#ua').disabled = true;
+        }
+        done[q.id] = true;
+        $('#nextQ').textContent = 'Continuar';
+        return true;
       }
 
       if(q.type==='mcq'){
         $('#qArea').innerHTML = q.options.map((o,i)=>`<button type="button" class="opt" data-i="${i}">${o}</button>`).join('');
-        $$('#qArea .opt').forEach(b=> b.onclick = ()=>{
-          if(locked) return; // bloquear cambio
-          const i = parseInt(b.dataset.i);
-          answers[q.id]=i; locked=true;
-          if(!defer){
-            const ok = isCorrect(q,i);
-            $$('#qArea .opt').forEach(x=>x.classList.remove('sel','right','wrong'));
-            b.classList.add('sel', ok?'right':'wrong');
-            evaluateAndShow();
+        let selected = answers[q.id];
+        $$('#qArea .opt').forEach((b,i)=>{
+          if(selected===i) b.classList.add('selected');
+          if(done[q.id]){
+            b.disabled = true;
+            if(q.answer.includes(i)) b.classList.add('correct');
+            if(selected===i && !q.answer.includes(i)) b.classList.add('incorrect');
           }else{
-            $$('#qArea .opt').forEach(x=>x.classList.remove('sel','right','wrong'));
-            b.classList.add('sel');
+            b.onclick = ()=>{
+              answers[q.id]=i;
+              selected=i;
+              $$('#qArea .opt').forEach(x=>x.classList.remove('selected'));
+              b.classList.add('selected');
+            };
           }
         });
       }else{
-        $('#qArea').innerHTML = '<input class="input" id="ua" placeholder="Respuesta…">';
-        $('#ua').onchange = (e)=>{ if(!locked){ answers[q.id]=e.target.value; locked=true; if(!defer){ evaluateAndShow(); } } };
+        const prev = answers[q.id] || '';
+        $('#qArea').innerHTML = `<input class="input" id="ua" placeholder="Respuesta…" value="${prev}">`;
+        if(done[q.id]) $('#ua').disabled = true;
+        $('#ua').oninput = e=>{ if(!done[q.id]) answers[q.id]=e.target.value; };
+      }
+
+      if(done[q.id]){
+        const ok = isCorrect(q, answers[q.id]);
+        const ansText = (q.type==='mcq' ? q.options.filter((_,k)=>q.answer.includes(k)).join(' | ') : q.answer[0]);
+        $('#qFeedback').innerHTML = `<div class="feedback ${ok?'ok':'ko'}">${ok?'✅ Correcto':'❌ Incorrecto'} — <b>Respuesta:</b> ${ansText}${q.explanation? ' — '+q.explanation:''}</div>`;
+        $('#nextQ').textContent = 'Continuar';
       }
 
       $('#prevQ').onclick = ()=>{ idx = Math.max(0, idx-1); draw(); };
       $('#nextQ').onclick = ()=>{
-        if(!reviewing){
-          if(!defer){
-            if(answers[q.id]===undefined){ showBanner('Selecciona o escribe una respuesta.'); return; }
-            reviewing = true; $('#nextQ').textContent = 'Continuar';
-          }else{
-            if(!evaluateAndShow()) return;
-          }
+        if(!done[q.id]){
+          if(!evaluateAndShow()) return;
         }else{
           if(idx===pool.length-1) finish(); else { idx++; draw(); }
         }
