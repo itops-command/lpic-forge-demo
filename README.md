@@ -1,6 +1,6 @@
 # LPIC Forge Demo
 
-Proyecto para practicar y preparar LPIC-101/102 con quizzes, SRS (spaced repetition), simulador y labs.
+Proyecto para practicar y preparar LPIC-101/102 con quizzes, simulador y labs.
 
 ## Objetivos
 - Reforzar conceptos de Linux/LPIC con ejercicios y quizzes.
