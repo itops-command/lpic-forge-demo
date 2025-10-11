@@ -103,6 +103,7 @@ body {
   background:#0a1327
 }
 .opt.selected { background:rgba(79,137,255,.25); border-color:var(--accent) }
+.opt.disabled { opacity:.5; cursor:not-allowed }
 .opt.correct { background:rgba(61,214,140,.25); border-color:var(--good) }
 .opt.incorrect { background:rgba(255,93,122,.25); border-color:var(--bad) }
 .kbd {

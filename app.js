@@ -532,13 +532,13 @@ async function init(){
     if(examTick) clearInterval(examTick);
     examTick = setInterval(()=>{ timeLeft--; $('#examTimer').textContent = fmtHMS(timeLeft); if(timeLeft<=0){ clearInterval(examTick); finish(true); } }, 1000);
 
-    function draw(){
-      const q = pool[idx];
-      const prompt = q.prompt; // en examen NO alternamos texto para mantener consistencia
-      locked=false;
+      function draw(){
+        const q = pool[idx];
+        const prompt = q.prompt; // en examen NO alternamos texto para mantener consistencia
+        locked = answers[q.id] !== undefined && answers[q.id] !== '';
 
-      panel.innerHTML = `
-        <div class="panel">
+        panel.innerHTML = `
+          <div class="panel">
           <div class="row" style="justify-content:space-between"><small>${q.topic}</small><span class="badge">${q.difficulty}</span></div>
           <div style="font-size:18px;margin-top:8px">${prompt}</div>
           <div id="eArea" style="margin-top:10px"></div>
@@ -551,28 +551,41 @@ async function init(){
           </div>
         </div>`;
 
-      if(q.type==='mcq'){
-        $('#eArea').innerHTML = q.options.map((o,i)=>{
-          const sel = answers[q.id]===i ? ' sel' : '';
-          return `<button type="button" class="opt${sel}" data-i="${i}">${o}</button>`;
-        }).join('');
-        $$('#eArea .opt').forEach(b=> b.onclick = ()=>{
-          if(locked) return; // bloquear cambio si quisiéramos; aquí permitimos cambiar hasta pulsar "Siguiente"
-          const i = parseInt(b.dataset.i);
-          answers[q.id]=i;
-          $$('#eArea .opt').forEach(x=>x.classList.remove('sel'));
-          b.classList.add('sel');
-        });
-      }else{
-        $('#eArea').innerHTML = `<input class="input" id="eUA" placeholder="Respuesta…">`;
-        if(answers[q.id]) $('#eUA').value = answers[q.id];
-        $('#eUA').onchange = (e)=>{ answers[q.id] = e.target.value; };
-      }
+        if(q.type==='mcq'){
+          const answered = answers[q.id] !== undefined;
+          $('#eArea').innerHTML = q.options.map((o,i)=>{
+            const cls = ['opt'];
+            if(answered && answers[q.id]===i) cls.push('selected');
+            if(answered) cls.push('disabled');
+            return `<button type="button" class="${cls.join(' ')}" data-i="${i}" ${answered?'disabled':''}>${o}</button>`;
+          }).join('');
+          if(!answered){
+            $$('#eArea .opt').forEach(b=> b.onclick = ()=>{
+              const i = parseInt(b.dataset.i);
+              answers[q.id]=i;
+              $$('#eArea .opt').forEach(x=>x.classList.remove('selected'));
+              b.classList.add('selected');
+              $('#nextE').disabled = false;
+            });
+          }
+        }else{
+          $('#eArea').innerHTML = `<input class="input" id="eUA" placeholder="Respuesta…">`;
+          if(answers[q.id]) $('#eUA').value = answers[q.id];
+          if(answers[q.id]!==undefined && answers[q.id] !== ''){
+            $('#eUA').setAttribute('disabled','');
+          }else{
+            $('#eUA').oninput = (e)=>{ answers[q.id] = e.target.value; $('#nextE').disabled = !e.target.value; };
+          }
+        }
 
-      $('#nextE').onclick = ()=>{
-        if(answers[q.id]===undefined || answers[q.id]===''){ showBanner('Selecciona/escribe una respuesta antes de continuar.'); return; }
-        if(idx===pool.length-1){ finish(false); } else { idx++; draw(); }
-      };
+        $('#nextE').disabled = answers[q.id]===undefined || answers[q.id]==='';
+
+        $('#nextE').onclick = ()=>{
+          if(answers[q.id]===undefined || answers[q.id]===''){ return; }
+          $$('#eArea .opt').forEach(b=>{ b.classList.add('disabled'); b.disabled = true; });
+          const inp = $('#eUA'); if(inp) inp.setAttribute('disabled','');
+          if(idx===pool.length-1){ finish(false); } else { idx++; draw(); }
+        };
       $('#submitExam').onclick = ()=> finish(false);
     }
 
@@ -586,7 +599,8 @@ async function init(){
       save();
 
       const score = Math.round((correct / Math.max(1, pool.length))*100);
-      state.history.exams.push({ts: Date.now(), count: pool.length, timeMin, used: (timeMin*60 - Math.max(0, parseInt($('#examTimer').textContent.split(':').reduce((a,b)=>60*a+ +b,0)))), score});
+      const used = timeMin*60 - timeLeft;
+      state.history.exams.push({ts: Date.now(), count: pool.length, timeMin, used, score});
       save();
 
       const wrongList = pool.filter(q=> !isCorrect(q,answers[q.id])).map(q=>{
@@ -600,14 +614,26 @@ async function init(){
           <div class="row">
             <div class="badge">Puntaje: ${score}%</div>
             <div class="badge">Correctas: ${correct}/${pool.length}</div>
+            <div class="badge">Tiempo: ${fmtHMS(used)}</div>
           </div>
           <div class="hr"></div>
-          <h4>❌ Revisión de fallos</h4>
-          ${wrongList? `<ol>${wrongList}</ol>` : '<div class="small">¡Sin fallos, excelente!</div>'}
-          <div class="hr"></div>
-          <button id="examAgain" class="btn">Nuevo simulacro</button>
+          <div class="row" style="justify-content:flex-end">
+            <button id="examReview" class="btn ghost">Revisar</button>
+            <button id="examAgain" class="btn">Nuevo simulacro</button>
+          </div>
         </div>`;
       $('#examAgain').onclick = startExam;
+      $('#examReview').onclick = ()=>{
+        $('#examPanel').innerHTML = `
+          <div class="panel">
+            <h3>Revisión</h3>
+            <h4>❌ Revisión de fallos</h4>
+            ${wrongList? `<ol>${wrongList}</ol>` : '<div class="small">¡Sin fallos, excelente!</div>'}
+            <div class="hr"></div>
+            <button id="examAgain2" class="btn">Nuevo simulacro</button>
+          </div>`;
+        $('#examAgain2').onclick = startExam;
+      };
       drawTopicsChart(); renderDashList();
     }
 
