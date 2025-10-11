@@ -3,6 +3,12 @@ const $$ = sel => Array.from(document.querySelectorAll(sel));
 
 const LSKEY = 'lpic_pro_state';
 const state = JSON.parse(localStorage.getItem(LSKEY) || '{}');
+const COURSE_NAMES = {
+  linux: 'Linux',
+  'data-science': 'Ciencia de Datos',
+  datafactory: 'Datafactory',
+  azure: 'Azure'
+};
 
 // Estado base
 state.profile  ||= { email: '' };
@@ -13,19 +19,68 @@ state.progress ||= {       // métricas
   perTopic: {}             // topic -> {right, wrong}
 };
 state.history  ||= { exams: [] }; // intentos de simulador
-state.ui       ||= { lastTab: 'plan' };
+state.ui       ||= {};
+state.ui.lastTab ||= 'plan';
+if(!('course' in state.ui)) state.ui.course = null;
 
 function save(){ localStorage.setItem(LSKEY, JSON.stringify(state)); }
 function today(){ return new Date().toISOString().slice(0,10); }
+function getCourseLabel(){
+  const key = state.ui.course;
+  return key && COURSE_NAMES[key] ? COURSE_NAMES[key] : null;
+}
+
+function updateCourseTag(){
+  const tag = $('#courseTag');
+  if(!tag) return;
+  const label = getCourseLabel();
+  if(state.ui.course==='linux') tag.textContent = `Curso: ${label}`;
+  else if(label) tag.textContent = `Curso: ${label}`;
+  else tag.textContent = 'Selecciona un curso para comenzar';
+}
+
 function showBanner(msg){
   let el = $('#banner');
+  const host = (state.ui.course === 'linux' ? $('#appWrap') : $('#courseSelect')) || document.querySelector('.wrap') || document.body;
+  const anchor = host.firstChild?.nextSibling || host.firstChild;
   if(!el){
     el = document.createElement('div');
     el.id = 'banner';
     el.style.cssText = 'margin:10px 0;padding:10px;border:1px solid #7a5c15;background:#392c14;border-radius:10px';
-    $('.wrap').insertBefore(el, $('.wrap').firstChild?.nextSibling);
+    if(anchor) host.insertBefore(el, anchor); else host.appendChild(el);
+  }else if(el.parentElement !== host){
+    if(anchor) host.insertBefore(el, anchor); else host.appendChild(el);
   }
   el.textContent = msg;
+}
+
+function applyCourseView(){
+  const select = $('#courseSelect');
+  const app = $('#appWrap');
+  if(!select || !app) return;
+  if(state.ui.course === 'linux'){
+    app.removeAttribute('hidden');
+    app.style.display = '';
+    select.style.display = 'none';
+  }else{
+    select.style.display = '';
+    app.setAttribute('hidden', '');
+  }
+  updateCourseTag();
+}
+
+function enterCourse(id){
+  if(id === 'linux'){
+    state.ui.course = 'linux';
+    save();
+    applyCourseView();
+    tab(state.ui.lastTab || 'plan');
+  }else{
+    state.ui.course = null;
+    save();
+    applyCourseView();
+    showBanner('Este curso estará disponible próximamente.');
+  }
 }
 
 function addMinutes(m){
@@ -43,6 +98,7 @@ function renderHeader(){
   $('#goal').textContent = state.stats.goal;
   $('#xp').textContent = state.stats.xp;
   $('#emailInput').value = state.profile.email || '';
+  updateCourseTag();
 }
 function resetAll(){
   if(confirm('¿Restablecer todo tu progreso?')){ localStorage.removeItem(LSKEY); location.reload(); }
@@ -254,6 +310,16 @@ function renderDashList(){
 
 // INIT
 async function init(){
+  applyCourseView();
+  $$('[data-course-select]').forEach(btn=>{
+    btn.addEventListener('click', ()=> enterCourse(btn.dataset.courseSelect));
+  });
+  $('#changeCourse')?.addEventListener('click', ()=>{
+    state.ui.course = null;
+    save();
+    applyCourseView();
+  });
+
   renderHeader();
   // Tabs
   $$('.tab').forEach(t=>t.addEventListener('click', ()=>tab(t.dataset.id)));
@@ -623,4 +689,4 @@ async function init(){
   let lastTick=Date.now(); setInterval(()=>{ const mins=Math.floor((Date.now()-lastTick)/60000); if(mins>0){ addMinutes(mins); lastTick=Date.now(); }}, 10000);
 }
 
-window.addEventListener('load', ()=>{ init(); });
+window.addEventListener('DOMContentLoaded', ()=>{ init(); });

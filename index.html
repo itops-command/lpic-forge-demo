@@ -9,18 +9,57 @@
     <link rel="stylesheet" href="./style.css">
   </head>
   <body>
-    <div class="wrap">
+    <div class="wrap" id="courseSelect">
+      <header class="panel" style="text-align:center">
+        <h1 style="margin:0">LPIC Forge</h1>
+        <p class="lead">Elige el camino que quieres dominar. Cada curso combina planes de estudio, quizzes y laboratorios prácticos.</p>
+      </header>
+      <div class="panel" style="margin-top:16px">
+        <div class="course-grid">
+          <article class="course-card" data-course="data-science">
+            <span class="course-tag soon">Próximamente</span>
+            <h2>Ciencia de Datos</h2>
+            <p>Aprende Python, estadística aplicada y machine learning con retos guiados.</p>
+            <button class="btn ghost" type="button" data-course-select="data-science" disabled>Explorar</button>
+          </article>
+          <article class="course-card" data-course="linux">
+            <span class="course-tag live">Disponible</span>
+            <h2>Linux</h2>
+            <p>Prepárate para certificaciones como LPIC-1 con planes diarios y simuladores realistas.</p>
+            <button class="btn" type="button" data-course-select="linux">Ingresar</button>
+          </article>
+          <article class="course-card" data-course="datafactory">
+            <span class="course-tag soon">Próximamente</span>
+            <h2>Datafactory</h2>
+            <p>Orquesta pipelines modernos de datos y automatiza despliegues con buenas prácticas.</p>
+            <button class="btn ghost" type="button" data-course-select="datafactory" disabled>Explorar</button>
+          </article>
+          <article class="course-card" data-course="azure">
+            <span class="course-tag soon">Próximamente</span>
+            <h2>Azure</h2>
+            <p>Domina los servicios clave de Azure para arquitecturas en la nube y certificaciones.</p>
+            <button class="btn ghost" type="button" data-course-select="azure" disabled>Explorar</button>
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap" id="appWrap" hidden>
       <header class="panel">
         <div class="row" style="justify-content:space-between;align-items:center">
           <h1 style="margin:0">LPIC Forge PRO</h1>
-          <div class="tabbar">
+          <div class="row" style="align-items:center;gap:10px">
+            <span class="badge" id="courseTag">Selecciona un curso para comenzar</span>
+            <button id="changeCourse" class="btn ghost" style="padding:8px 12px">Cambiar curso</button>
+          </div>
+        </div>
+        <div class="tabbar" style="margin-top:12px">
             <div class="tab active" data-id="plan">Plan</div>
             <div class="tab" data-id="repasoView" id="btnRepasoInteractivo">Repaso Interactivo</div>
             <div class="tab" data-id="quiz">Quiz</div>
             <div class="tab" data-id="exam">Simulador</div>
             <div class="tab" data-id="labs">Labs</div>
             <div class="tab" data-id="dash">Dashboard</div>
-          </div>
         </div>
         <div class="row" style="margin-top:8px">
           <div class="panel" style="padding:6px 10px"><b>Racha:</b> <span id="streak">0</span> días</div>
